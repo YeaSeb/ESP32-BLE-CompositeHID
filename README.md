@@ -23,6 +23,17 @@ Published under the MIT license. Please see license.txt.
  - [x] Haptic feedback callbacks for strong and weak motor rumble support
  - [ ] LED support (pull requests welcome)
 
+## Dualsense Edge gamepad features
+ - [x] All buttons and joystick axes available, including 4 extra buttons (paddles1-2 and fn1-2) mute and touchpad
+ - [x] Steam/Emulator/SDL support
+ - [x] Player LEDs, mute LED and RGB LED support
+ - [x] Basic rumble support
+ - [x] Gyroscope/Accelerometer support
+ - [x] Touchpad support
+ - [ ] advanced Haptics 
+ - [ ] adaptive trigger
+ - [ ] audio channels
+
 ## Generic gamepad features (from ESP32-BLE-Gamepad)
 
  - [x] Button press (128 buttons)
