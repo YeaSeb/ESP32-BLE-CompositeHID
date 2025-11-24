@@ -1,0 +1,360 @@
+#include <BleConnectionStatus.h>
+
+#include <BleCompositeHID.h>
+#include <DualsenseGamepadDevice.h>
+#define CONFIG_BT_NIMBLE_EXT_ADV 0
+#define CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE 4096
+#define CONFIG_MTU_SIZE 430
+#define CONFIG_DEFAULT_PHY BLE_GAP_LE_PHY_2M_MASK
+
+int ledPin = 8; // LED connected to digital pin 8 on ESP32C3
+uint8_t playerLEDs = 0x00;
+DualsenseGamepadDevice* dualsense;
+BleCompositeHID compositeHID("Libresteishon Edge", "YeaSeb", 100);
+
+//decode the player led
+void OnPlayerLEDChange(DualsenseGamepadOutputReportData data)
+{
+    if ((data.player_leds & DUALSENSE_PLAYERLED_ON) == DUALSENSE_PLAYERLED_ON) {
+        if ((data.player_leds & DUALSENSE_PLAYERLED_1) == DUALSENSE_PLAYERLED_1) {
+            Serial.println("led 1 on");
+        } else {
+            Serial.println("led 1 off");
+        }
+        if ((data.player_leds & DUALSENSE_PLAYERLED_2) == DUALSENSE_PLAYERLED_2) {
+            Serial.println("led 2 on");
+        } else {
+            Serial.println("led 2 off");
+        }
+        if ((data.player_leds & DUALSENSE_PLAYERLED_3) == DUALSENSE_PLAYERLED_3) {
+            Serial.println("led 3 on");
+        } else {
+            Serial.println("led 3 off");
+        }
+        if ((data.player_leds & DUALSENSE_PLAYERLED_4) == DUALSENSE_PLAYERLED_4) {
+            Serial.println("led 4 on");
+        } else {
+            Serial.println("led 4 off");
+        }
+        if ((data.player_leds & DUALSENSE_PLAYERLED_5) == DUALSENSE_PLAYERLED_5) {
+            Serial.println("led 5 on");
+        } else {
+            Serial.println("led 5 off");
+        }
+    }
+}
+void OnVibrateEvent(DualsenseGamepadOutputReportData data)
+{
+
+    if (data.motor_right > 0 || data.motor_left > 0) {
+        digitalWrite(ledPin, LOW);
+    } else {
+        digitalWrite(ledPin, HIGH);
+    }
+    if (data.player_leds != playerLEDs) {
+        playerLEDs = data.player_leds;
+        OnPlayerLEDChange(data);
+    }
+    Serial.println("Output event. Weak motor: " + String(data.motor_left) + " Strong motor: " + String(data.motor_right) + " Mute LED: " + String(data.mute_button_led) + " LED R: " + String(data.lightbar_red) + " G: " + String(data.lightbar_green) + " B: " + String(data.lightbar_blue));
+}
+
+void setup()
+{
+    Serial.begin(115200);
+    pinMode(ledPin, OUTPUT); // sets the digital pin as output
+
+    DualsenseEdgeControllerDeviceConfiguration* config = new DualsenseEdgeControllerDeviceConfiguration();
+    config->setAutoReport(true);
+    config->setAutoDefer(false);
+
+    // The composite HID device pretends to be a valid Dualsense controller via vendor and product IDs (VID/PID).
+    // Platforms like windows/linux need this
+    BLEHostConfiguration hostConfig = config->getIdealHostConfiguration();
+    Serial.println("Using VID source: " + String(hostConfig.getVidSource(), HEX));
+    Serial.println("Using VID: " + String(hostConfig.getVid(), HEX));
+    Serial.println("Using PID: " + String(hostConfig.getPid(), HEX));
+    Serial.println("Using GUID version: " + String(hostConfig.getGuidVersion(), HEX));
+    Serial.println("Using serial number: " + String(hostConfig.getSerialNumber()));
+
+    // Set up dualsense
+    dualsense = new DualsenseGamepadDevice(config);
+    // Set up vibration event handler
+    FunctionSlot<DualsenseGamepadOutputReportData> vibrationSlot(OnVibrateEvent);
+    dualsense->onVibrate.attach(vibrationSlot);
+    
+    // Add all child devices to the top-level composite HID device to manage them
+    compositeHID.addDevice(dualsense);
+    // Start the composite HID device to broadcast HID reports
+    // Serial.println("Starting composite HID device...");
+    compositeHID.begin(hostConfig);
+}
+
+void loop()
+{
+    if (compositeHID.isConnected()) {
+      //initialization can be a bit unrealiable
+        delay(150);
+        dualsense->sendPairingInfoReport();
+
+        dualsense->sendFirmInfoReport();
+
+        dualsense->sendCalibrationReport();
+
+        delay(280); 
+        dualsense->resetInputs();
+        int selection = 33;
+
+        while (compositeHID.isConnected()) {
+            Serial.println("Select a button/axis to be activated for testing \n 0: A \n 1: B \n 2: X \n 3: Y \n 4: X \n  ");
+            while (Serial.available() < 3) {
+                dualsense->timestamp();
+                dualsense->sendGamepadReport();
+                delay(20);
+            }
+            while (Serial.available() > 2) {
+                Serial.println("Waiting for input");
+                selection = Serial.parseInt();
+            }
+            Serial.println(selection);
+            switch (selection) {
+            case 0: {
+                Serial.println("Pressing Cross");
+                dualsense->press(DUALSENSE_BUTTON_A);
+                delay(500);
+                dualsense->release(DUALSENSE_BUTTON_A);
+                break;
+            }
+            case 1: {
+                dualsense->press(DUALSENSE_BUTTON_B);
+                Serial.println("Pressing Circle");
+                delay(100);
+                dualsense->release(DUALSENSE_BUTTON_B);
+                break;
+            }
+            case 2: {
+                dualsense->press(DUALSENSE_BUTTON_X);
+                Serial.println("Pressing Square");
+                delay(200);
+                dualsense->release(DUALSENSE_BUTTON_X);
+                break;
+            }
+            case 3:
+                dualsense->press(DUALSENSE_BUTTON_Y);
+                Serial.println("Pressing Triangle");
+                delay(200);
+                dualsense->release(DUALSENSE_BUTTON_Y);
+                break;
+            case 4:
+                dualsense->press(DUALSENSE_BUTTON_LB);
+                Serial.println("Pressing L1");
+                delay(200);
+                dualsense->release(DUALSENSE_BUTTON_LB);
+                break;
+            case 5:
+                dualsense->press(DUALSENSE_BUTTON_RB);
+                Serial.println("Pressing R1");
+                delay(200);
+                dualsense->release(DUALSENSE_BUTTON_RB);
+                break;
+            case 6:
+                dualsense->press(DUALSENSE_BUTTON_LS);
+                Serial.println("Pressing L3");
+                delay(200);
+                dualsense->release(DUALSENSE_BUTTON_LS);
+                break;
+            case 7:
+                dualsense->press(DUALSENSE_BUTTON_RS);
+                Serial.println("Pressing R3");
+                delay(200);
+                dualsense->release(DUALSENSE_BUTTON_RS);
+                break;
+            case 8:
+                dualsense->press(DUALSENSE_BUTTON_SELECT);
+                Serial.println("Pressing Select");
+                delay(200);
+                dualsense->release(DUALSENSE_BUTTON_SELECT);
+                break;
+            case 9:
+                dualsense->press(DUALSENSE_BUTTON_START);
+                Serial.println("Pressing Start");
+                delay(200);
+                dualsense->release(DUALSENSE_BUTTON_START);
+                break;
+            case 10:
+                dualsense->press(DUALSENSE_BUTTON_SHARE);
+                Serial.println("Pressing Share");
+                delay(200);
+                dualsense->release(DUALSENSE_BUTTON_SHARE);
+                break;
+            case 11:
+                dualsense->press(DUALSENSE_BUTTON_MUTE);
+                Serial.println("Pressing Mute");
+                delay(200);
+                dualsense->release(DUALSENSE_BUTTON_MUTE);
+                break;
+            case 12:
+                dualsense->pressDPadDirection(DUALSENSE_BUTTON_DPAD_NORTH);
+                Serial.println("Pressing DPAD UP");
+                delay(200);
+                dualsense->pressDPadDirection(DUALSENSE_BUTTON_DPAD_NONE);
+                break;
+            case 13:
+                dualsense->pressDPadDirection(DUALSENSE_BUTTON_DPAD_EAST);
+                Serial.println("Pressing DPAD RIGHT");
+                delay(200);
+                dualsense->pressDPadDirection(DUALSENSE_BUTTON_DPAD_NONE);
+                break;
+            case 14:
+                dualsense->pressDPadDirection(DUALSENSE_BUTTON_DPAD_WEST);
+                Serial.println("Pressing DPAD LEFT");
+                delay(200);
+                dualsense->pressDPadDirection(DUALSENSE_BUTTON_DPAD_NONE);
+                break;
+            case 15:
+                dualsense->pressDPadDirection(DUALSENSE_BUTTON_DPAD_SOUTH);
+                Serial.println("Pressing DPAD DOWN");
+                delay(200);
+                dualsense->pressDPadDirection(DUALSENSE_BUTTON_DPAD_NONE);
+                break;
+            case 16:
+                dualsense->setLeftTrigger(100);
+                Serial.println("Pressing L2");
+                delay(200);
+                dualsense->setLeftTrigger(0);
+                delay(200);
+                dualsense->press(DUALSENSE_BUTTON_LT);
+                delay(200);
+                dualsense->release(DUALSENSE_BUTTON_LT);
+                break;
+            case 17:
+                dualsense->setRightTrigger(100);
+                Serial.println("Pressing R2");
+                delay(200);
+                dualsense->setRightTrigger(0);
+                delay(200);
+                dualsense->press(DUALSENSE_BUTTON_RT);
+                delay(200);
+                dualsense->release(DUALSENSE_BUTTON_RT);
+                break;
+            case 18:
+                dualsense->setLeftThumb(-120, 0);
+                Serial.println("Moving left_analog left");
+                delay(200);
+                dualsense->setLeftThumb(0, 0);
+                break;
+            case 19:
+                dualsense->setLeftThumb(120, 0);
+                Serial.println("Moving left_analog Right");
+                delay(200);
+                dualsense->setLeftThumb(0, 0);
+                break;
+            case 20: {
+                dualsense->setLeftThumb(0, 120);
+                Serial.println("Moving left_analog down");
+                delay(200);
+                dualsense->setLeftThumb(0, 0);
+                break;
+            }
+            case 21: {
+                dualsense->setLeftThumb(0, -120);
+                Serial.println("Moving left_analog up");
+                delay(200);
+                dualsense->setLeftThumb(0, 0);
+                break;
+            }
+            case 22: {
+                dualsense->setRightThumb(-120, 0);
+                Serial.println("Moving right_analog left");
+                delay(200);
+                dualsense->setRightThumb(0, 0);
+                break;
+            }
+            case 23: {
+                dualsense->setRightThumb(120, 0);
+                Serial.println("Moving right_analog Right");
+                delay(200);
+                dualsense->setRightThumb(0, 0);
+                break;
+            }
+            case 24: {
+                dualsense->setRightThumb(-120, 0);
+                Serial.println("Moving right_analog left");
+                delay(200);
+                dualsense->setRightThumb(0, 0);
+                break;
+            }
+            case 25: {
+                dualsense->setRightThumb(0, 120);
+                Serial.println("Moving right_analog down");
+                delay(200);
+                dualsense->setRightThumb(0, 0);
+                break;
+            }
+            case 26: {
+                dualsense->setRightThumb(0, -120);
+                Serial.println("Moving right_analog up");
+                delay(200);
+                dualsense->setRightThumb(0, 0);
+                break;
+            }
+            case 27: {
+                dualsense->press(DUALSENSE_BUTTON_L4);
+                Serial.println("Pressing L4");
+                delay(200);
+                dualsense->release(DUALSENSE_BUTTON_L4);
+                break;
+            }
+            case 28: {
+                dualsense->press(DUALSENSE_BUTTON_R4);
+                Serial.println("Pressing R4");
+                delay(200);
+                dualsense->release(DUALSENSE_BUTTON_R4);
+                break;
+            }
+            case 29: {
+                dualsense->press(DUALSENSE_BUTTON_L5);
+                Serial.println("Pressing L5");
+                delay(200);
+                dualsense->release(DUALSENSE_BUTTON_L5);
+                break;
+            }
+            case 30: {
+                dualsense->press(DUALSENSE_BUTTON_R5);
+                Serial.println("Pressing R5");
+                delay(200);
+                dualsense->release(DUALSENSE_BUTTON_R5);
+                break;
+            }
+            case 31: {
+                Serial.println("sending gyro/accel movement");
+                for (float i = 0; i < TWO_PI; i += 0.05) {
+                    dualsense->setAccel(cos(i) * 300, sin(i) * 300, tan(i) * 300);
+                    dualsense->setGyro(cos(i) * 400, sin(i) * 400, tan(i) * 400);
+                    delay(5);
+                }
+                break;
+            }
+            case 32: {
+                Serial.println("Sending touchpad movement");
+                delay(200);
+                for (float i = 0; i < TWO_PI; i += 0.05) {
+                    dualsense->setLeftTouchpad(cos(i) * 400 + 1000, sin(i) * 400 + 540);
+                    delay(15);
+                }
+                delay(20);
+                dualsense->releaseLeftTouchpad();
+                break;
+            }
+            default: {
+                Serial.println("Selection invalid");
+                Serial.println(selection);
+            }
+            }
+        }
+
+    } else {
+        Serial.println("disconnected");
+        delay(500);
+    }
+    
+}
