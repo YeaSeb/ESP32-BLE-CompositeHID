@@ -7,12 +7,10 @@
 #define CONFIG_MTU_SIZE 430
 #define CONFIG_DEFAULT_PHY BLE_GAP_LE_PHY_2M_MASK
 
-int ledPin = 8; // LED connected to digital pin 8 on ESP32C3
+int ledPin = 8; // LED connected to digital pin 13
 uint8_t playerLEDs = 0x00;
 DualsenseGamepadDevice* dualsense;
-BleCompositeHID compositeHID("Libresteishon Edge", "YeaSeb", 100);
-
-//decode the player led
+BleCompositeHID compositeHID("Musulesteishon Edge", "YeaSeb", 100);
 void OnPlayerLEDChange(DualsenseGamepadOutputReportData data)
 {
     if ((data.player_leds & DUALSENSE_PLAYERLED_ON) == DUALSENSE_PLAYERLED_ON) {
@@ -55,7 +53,7 @@ void OnVibrateEvent(DualsenseGamepadOutputReportData data)
         playerLEDs = data.player_leds;
         OnPlayerLEDChange(data);
     }
-    Serial.println("Output event. Weak motor: " + String(data.motor_left) + " Strong motor: " + String(data.motor_right) + " Mute LED: " + String(data.mute_button_led) + " LED R: " + String(data.lightbar_red) + " G: " + String(data.lightbar_green) + " B: " + String(data.lightbar_blue));
+    // Serial.println("Output event. Weak motor: " + String(data.motor_left) + " Strong motor: " + String(data.motor_right) + " Mute LED: " + String(data.mute_button_led) + " LED R: " + String(data.lightbar_red) + " G: " + String(data.lightbar_green) + " B: " + String(data.lightbar_blue));
 }
 
 void setup()
@@ -81,7 +79,7 @@ void setup()
     // Set up vibration event handler
     FunctionSlot<DualsenseGamepadOutputReportData> vibrationSlot(OnVibrateEvent);
     dualsense->onVibrate.attach(vibrationSlot);
-    
+
     // Add all child devices to the top-level composite HID device to manage them
     compositeHID.addDevice(dualsense);
     // Start the composite HID device to broadcast HID reports
@@ -92,7 +90,6 @@ void setup()
 void loop()
 {
     if (compositeHID.isConnected()) {
-      //initialization can be a bit unrealiable
         delay(150);
         dualsense->sendPairingInfoReport();
 
@@ -100,12 +97,13 @@ void loop()
 
         dualsense->sendCalibrationReport();
 
-        delay(280); 
+        delay(280);
         dualsense->resetInputs();
-        int selection = 33;
+        int selection = 32;
+        const float STEP = 0.05; // angle change per frame (speed)
 
         while (compositeHID.isConnected()) {
-            Serial.println("Select a button/axis to be activated for testing \n 0: A \n 1: B \n 2: X \n 3: Y \n 4: X \n  ");
+            Serial.println("Select a button/axis to be activated for testing  0: Cross 1: Circle  2: Square  3: Triangle \n 4: L1 5: R1 6: L3 7: R3 8: select 9: start 10: Home 11:VolMute \n 12: DPAD u 13: DPAD R 14: DPAD L 15: DPAD D \n 16: L2 17: R2 \n 18:left stick left 19:left stick right 20:left stick down 21:left stick up \n 22:right stick left 23:right stick right 24:right stick down 25:right stick up \n 26: circle joysticks 27: L4 28 : R4 29: L5 30: R5 31: Gyro/Accel 32: Touchpad");
             while (Serial.available() < 3) {
                 dualsense->timestamp();
                 dualsense->sendGamepadReport();
@@ -181,10 +179,10 @@ void loop()
                 dualsense->release(DUALSENSE_BUTTON_START);
                 break;
             case 10:
-                dualsense->press(DUALSENSE_BUTTON_SHARE);
-                Serial.println("Pressing Share");
+                dualsense->press(DUALSENSE_BUTTON_MODE);
+                Serial.println("Pressing Home");
                 delay(200);
-                dualsense->release(DUALSENSE_BUTTON_SHARE);
+                dualsense->release(DUALSENSE_BUTTON_MODE);
                 break;
             case 11:
                 dualsense->press(DUALSENSE_BUTTON_MUTE);
@@ -277,24 +275,28 @@ void loop()
                 break;
             }
             case 24: {
-                dualsense->setRightThumb(-120, 0);
-                Serial.println("Moving right_analog left");
-                delay(200);
-                dualsense->setRightThumb(0, 0);
-                break;
-            }
-            case 25: {
                 dualsense->setRightThumb(0, 120);
                 Serial.println("Moving right_analog down");
                 delay(200);
                 dualsense->setRightThumb(0, 0);
                 break;
             }
-            case 26: {
+            case 25: {
                 dualsense->setRightThumb(0, -120);
                 Serial.println("Moving right_analog up");
                 delay(200);
                 dualsense->setRightThumb(0, 0);
+                break;
+            }
+            case 26: {
+                Serial.println("Circle both joysticks");
+                for (float i = 0; i < TWO_PI; i += STEP) {
+                    dualsense->setLeftThumb(cos(i) * 100, sin(i) * 100);
+                    dualsense->setRightThumb(cos(i) * 100, -sin(i) * 100);
+                    delay(15);
+                }
+                dualsense->setRightThumb(0, 0);
+                dualsense->setLeftThumb(0, 0);
                 break;
             }
             case 27: {
@@ -327,7 +329,7 @@ void loop()
             }
             case 31: {
                 Serial.println("sending gyro/accel movement");
-                for (float i = 0; i < TWO_PI; i += 0.05) {
+                for (float i = 0; i < TWO_PI; i += STEP) {
                     dualsense->setAccel(cos(i) * 300, sin(i) * 300, tan(i) * 300);
                     dualsense->setGyro(cos(i) * 400, sin(i) * 400, tan(i) * 400);
                     delay(5);
@@ -337,11 +339,16 @@ void loop()
             case 32: {
                 Serial.println("Sending touchpad movement");
                 delay(200);
-                for (float i = 0; i < TWO_PI; i += 0.05) {
+                for (float i = 0; i < TWO_PI; i += STEP) {
                     dualsense->setLeftTouchpad(cos(i) * 400 + 1000, sin(i) * 400 + 540);
                     delay(15);
                 }
                 delay(20);
+                Serial.println("Sending touchpad click");
+                dualsense->press(DUALSENSE_BUTTON_TOUCHPAD);
+                Serial.println("Pressing R5");
+                delay(200);
+                dualsense->release(DUALSENSE_BUTTON_TOUCHPAD);
                 dualsense->releaseLeftTouchpad();
                 break;
             }
@@ -356,5 +363,4 @@ void loop()
         Serial.println("disconnected");
         delay(500);
     }
-    
 }
