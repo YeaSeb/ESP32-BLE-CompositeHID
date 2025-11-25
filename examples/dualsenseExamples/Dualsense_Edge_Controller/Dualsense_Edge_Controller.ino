@@ -53,7 +53,7 @@ void OnVibrateEvent(DualsenseGamepadOutputReportData data)
         playerLEDs = data.player_leds;
         OnPlayerLEDChange(data);
     }
-    // Serial.println("Output event. Weak motor: " + String(data.motor_left) + " Strong motor: " + String(data.motor_right) + " Mute LED: " + String(data.mute_button_led) + " LED R: " + String(data.lightbar_red) + " G: " + String(data.lightbar_green) + " B: " + String(data.lightbar_blue));
+    Serial.println("Output event. Weak motor: " + String(data.motor_left) + " Strong motor: " + String(data.motor_right) + " Mute LED: " + String(data.mute_button_led) + " LED R: " + String(data.lightbar_red) + " G: " + String(data.lightbar_green) + " B: " + String(data.lightbar_blue));
 }
 
 void setup()
