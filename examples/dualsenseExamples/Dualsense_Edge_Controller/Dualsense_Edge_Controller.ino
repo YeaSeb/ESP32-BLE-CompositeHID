@@ -3,8 +3,6 @@
 #include <BleCompositeHID.h>
 #include <DualsenseGamepadDevice.h>
 #define CONFIG_BT_NIMBLE_EXT_ADV 1
-#define CONFIG_MTU_SIZE 430
-#define CONFIG_DEFAULT_PHY BLE_GAP_LE_PHY_2M_MASK
 
 int ledPin = 8; // LED connected to digital pin 13
 uint8_t playerLEDs = 0x00;
