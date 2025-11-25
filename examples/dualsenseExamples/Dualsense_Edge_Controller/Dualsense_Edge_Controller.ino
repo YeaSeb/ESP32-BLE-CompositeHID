@@ -10,7 +10,7 @@
 int ledPin = 8; // LED connected to digital pin 13
 uint8_t playerLEDs = 0x00;
 DualsenseGamepadDevice* dualsense;
-BleCompositeHID compositeHID("Musulesteishon Edge", "YeaSeb", 100);
+BleCompositeHID compositeHID("Libresteishon Edge", "YeaSeb", 100);
 void OnPlayerLEDChange(DualsenseGamepadOutputReportData data)
 {
     if ((data.player_leds & DUALSENSE_PLAYERLED_ON) == DUALSENSE_PLAYERLED_ON) {
