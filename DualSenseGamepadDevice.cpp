@@ -520,6 +520,43 @@ void DualsenseGamepadDevice::setAccel(int16_t x, int16_t y, int16_t z)
     }
 }
 
+void DualsenseGamepadDevice::setBatteryLevel(uint8_t level)
+{
+    level = constrain(level, DUALSENSE_BATTERY_MIN, DUALSENSE_BATTERY_MAX);
+    uint8_t internalLevel = level / 10;  // Convert 0-100 to 0-10
+
+    uint8_t newStatus = (_inputReport.status & 0xF0) | internalLevel;
+
+    if (_inputReport.status != newStatus) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            _inputReport.status = newStatus;
+        }
+
+        if (_config->getAutoReport()) {
+            sendGamepadReport();
+        }
+    }
+}
+
+void DualsenseGamepadDevice::setChargingStatus(bool charging)
+{
+    uint8_t status = charging ? 1 : 0;  // 1 for charging, 0 for discharging
+
+    uint8_t newStatus = (_inputReport.status & 0x0F) | (status << 4);
+
+    if (_inputReport.status != newStatus) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            _inputReport.status = newStatus;
+        }
+
+        if (_config->getAutoReport()) {
+            sendGamepadReport();
+        }
+    }
+}
+
 void DualsenseGamepadDevice::setTriggers(uint8_t left, uint8_t right)
 {
     left = constrain(left, DUALSENSE_TRIGGER_MIN, DUALSENSE_TRIGGER_MAX);
