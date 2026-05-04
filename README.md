@@ -31,7 +31,7 @@ Published under the MIT license. Please see license.txt.
  - [x] Gyroscope/Accelerometer support
  - [x] Touchpad support
  - [ ] advanced Haptics 
- - [ ] adaptive trigger
+ - [x] adaptive trigger
  - [ ] audio channels
 
 ## Generic gamepad features (from ESP32-BLE-Gamepad)
@@ -158,11 +158,13 @@ USB HID codes for keyboards created by MightyPork, 2016 (see KeyboardHIDCodes.h)
 
 ## Credits for ESP32-BLE-Gamepad
 
-Credits to [T-vK](https://github.com/T-vK) as this library is based on his ESP32-BLE-Mouse library (https://github.com/T-vK/ESP32-BLE-Mouse) that he provided.
+Credits to [T-vK](https://github.com/T-vK) as this library is based on their ESP32-BLE-Mouse library (https://github.com/T-vK/ESP32-BLE-Mouse).
 
-Credits to [chegewara](https://github.com/chegewara) as the ESP32-BLE-Mouse library is based on [this piece of code](https://github.com/nkolban/esp32-snippets/issues/230#issuecomment-473135679) that he provided.
+Credits to [chegewara](https://github.com/chegewara) as the ESP32-BLE-Mouse library is based on [this piece of code](https://github.com/nkolban/esp32-snippets/issues/230#issuecomment-473135679).
 
-Credits to [wakwak-koba](https://github.com/wakwak-koba) for the NimBLE [code](https://github.com/wakwak-koba/ESP32-NimBLE-Gamepad) that he provided.
+Credits to [wakwak-koba](https://github.com/wakwak-koba) for NimBLE [code](https://github.com/wakwak-koba/ESP32-NimBLE-Gamepad).
+
+Credits to [YeaSeb](https://github.com/YeaSeb) for contributing DualSense controller support.
 
 
 You might also be interested in:

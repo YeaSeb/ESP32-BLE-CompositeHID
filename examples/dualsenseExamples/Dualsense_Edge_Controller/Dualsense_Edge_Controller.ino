@@ -209,16 +209,16 @@ void OnVibrateEvent(DualsenseGamepadOutputReportData data)
 
     // Raw byte dump for active trigger effects — helps verify decoded values.
     // Shows mode + p[0..9]; for Vibration: freq is at p[9] (single) or p[8] (multi).
-    if (data.hasLeftTriggerEffect()) {
-        String d = " L2 raw: " + String(lt.mode);
-        for (int i = 0; i < 10; ++i) d += "," + String(lt.raw_params[i]);
-        message += d;
-    }
-    if (data.hasRightTriggerEffect()) {
-        String d = " R2 raw: " + String(rt.mode);
-        for (int i = 0; i < 10; ++i) d += "," + String(rt.raw_params[i]);
-        message += d;
-    }
+    // if (data.hasLeftTriggerEffect()) {
+    //     String d = " L2 raw: " + String(lt.mode);
+    //     for (int i = 0; i < 10; ++i) d += "," + String(lt.raw_params[i]);
+    //     message += d;
+    // }
+    // if (data.hasRightTriggerEffect()) {
+    //     String d = " R2 raw: " + String(rt.mode);
+    //     for (int i = 0; i < 10; ++i) d += "," + String(rt.raw_params[i]);
+    //     message += d;
+    // }
 
     if(!message.isEmpty()) Serial.println(message);
 
