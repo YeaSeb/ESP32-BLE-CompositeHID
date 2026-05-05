@@ -531,6 +531,33 @@ void loop()
                 dualsense->releaseLeftTouchpad();
                 break;
             }
+            case 33: {
+                // DualSense controllers can send battery info through the input report as well as through the BLE device.
+                // Pump seq()/timestamp() during each dwell so reports don't carry stale sequence numbers that hosts
+                // (DSX/Windows) may dedupe and drop.
+                auto dwell = [&](uint32_t ms) {
+                    uint32_t end = millis() + ms;
+                    while (millis() < end) {
+                        dualsense->timestamp();
+                        dualsense->seq();
+                        delay(20);
+                    }
+                };
+
+                dualsense->setChargingStatus(false);
+                for (int i = 100; i >= 0; i -= 25) {
+                    dualsense->setBatteryLevel(i);
+                    compositeHID.setBatteryLevel(i);
+                    dwell(1000);
+                }
+                dualsense->setChargingStatus(true);
+                for (int i = 0; i <= 100; i += 25) {
+                    dualsense->setBatteryLevel(i);
+                    compositeHID.setBatteryLevel(i);
+                    dwell(1000);
+                }
+                break;
+            }
             default: {
                 Serial.println("Selection invalid");
                 Serial.println(selection);
