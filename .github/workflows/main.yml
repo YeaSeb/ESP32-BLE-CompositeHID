@@ -48,7 +48,6 @@ jobs:
             - examples/GamepadExamples/SpecialButtons/SpecialButtons.ino
             - examples/GamepadExamples/TestAll/TestAll.ino
             - examples/XInputExamples/XboxXInputController/XboxXInputController.ino
-            - examples/dualsenseExamples/Dualsense_Edge_Controller/Dualsense_Edge_Controller.ino
             - examples/KeyboardExamples/KeyboardLEDs/KeyboardLEDs.ino
             - examples/KeyboardExamples/MediaKeys/MediaKeys.ino
             - examples/KeyboardExamples/PressKey/PressKey.ino
