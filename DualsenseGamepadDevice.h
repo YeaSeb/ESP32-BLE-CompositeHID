@@ -60,6 +60,14 @@ enum DualsenseDpadFlags : uint8_t {
 #define DUALSENSE_TRIGGER_MIN 0
 #define DUALSENSE_TRIGGER_MAX 255
 
+// Battery level range (0-100, representing 0%-100%)
+#define DUALSENSE_BATTERY_MIN 0
+#define DUALSENSE_BATTERY_MAX 100
+
+// Charging status range (high nibble of status byte)
+#define DUALSENSE_CHARGING_MIN 0
+#define DUALSENSE_CHARGING_MAX 15
+
 // Thumbstick range
 #define DUALSENSE_STICK_MIN -127
 #define DUALSENSE_STICK_MAX 127
@@ -917,6 +925,8 @@ public:
     void releaseRightTouchpad();
     void setAccel(int16_t x, int16_t y, int16_t z);
     void setGyro(int16_t pitch, int16_t yaw, int16_t roll);
+    void setBatteryLevel(uint8_t level);
+    void setChargingStatus(bool charging);
     void sendGamepadReport(bool defer = false);
     void sendFirmInfoReport(bool defer = false);
     void sendCalibrationReport(bool defer = false);
