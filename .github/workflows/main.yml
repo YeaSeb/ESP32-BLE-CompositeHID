@@ -57,6 +57,8 @@ jobs:
             - examples/MultipleDeviceExamples/GamepadMouseKeyboard/GamepadMouseKeyboard.ino
             - examples/MultipleDeviceExamples/XBoxControllerAndKeyboard/XBoxControllerAndKeyboard.ino
             - examples/SetBatteryLevel/SetBatteryLevel.ino
+            - examples/dualsenseExamples/Dualsense_Edge_Controller/Dualsense_Edge_Controller.ino
+            - examples/dualsenseExamples/Dualsense_Edge_Polling_Test/Dualsense_Edge_Polling_Test.ino
           libraries: |
             - name: callback
             - name: NimBLE-Arduino
